@@ -1,16 +1,11 @@
 # Liste des Cloud Builders : https://console.cloud.google.com/gcr/images/cloud-builders/GLOBAL
 steps:
-  - name: "ghcr.io/astral-sh/uv:python3.12-trixie-slim"
-    id: CI
-    entrypoint: /bin/sh
-    args:
-      - "-c"
-      - |
-        chmod a+x install.sh && ./install.sh
-        uv sync
-        uv pip install pytest 
-        uv run pytest .
-    env:
-      - "UV_CACHE_DIR=/root/.cache/uv"
-
-logs_bucket: gs://logs_purchase_predict/logs_build_cloud_build
+- name: "gcr.io/cloud-builders/docker"
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'purchase-predict-api', '--image', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA', '--region', 'us-central1', '--platform', 'managed']
+images:
+- gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA
