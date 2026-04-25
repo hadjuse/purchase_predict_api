@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: purchase-predict
+  labels:
+    app: purchase-predict
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pod-purchase-predict
+  template:
+    metadata:
+      labels:
+        app: pod-purchase-predict
+    spec:
+      containers:
+      - name: pod-purchase-predict
+        image: us-central1-docker.pkg.dev/arboreal-totem-444713-e9/purchased-docker/purchase_predict_api:DOCKER_TAG
+        env:
+        - name: PORT
+          value: "80"
+        - name: ENV
+          value: "staging"
+        - name: MLFLOW_SERVER
+          value: "http://104.154.147.1/"
+        - name: MLFLOW_REGISTRY_NAME
+          value: "purchase_predict"
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "0.5G"
+            cpu: "0.5"
+          limits:
+            memory: "1G"
+            cpu: "1"
