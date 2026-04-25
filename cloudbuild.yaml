@@ -23,7 +23,7 @@ steps:
   - '-f'
   - 'config.yaml'
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=europe-north1-b'
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
   - 'CLOUDSDK_CONTAINER_CLUSTER=purchase-predict-api'
 images:
 - gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA
