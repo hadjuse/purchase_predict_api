@@ -1,13 +1,27 @@
 # Liste des Cloud Builders : https://console.cloud.google.com/gcr/images/cloud-builders/GLOBAL
 steps:
 - name: "gcr.io/cloud-builders/docker"
+  id: Building Docker image
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA', '.']
 - name: 'gcr.io/cloud-builders/docker'
+  id: Pushing Docker image
   args: ['push', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA']
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args: ['run', 'deploy', 'purchase-predict-api', '--image', 'gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA', '--region', 'us-central1', '--platform', 'managed']
-images:
-- gcr.io/$PROJECT_ID/purchase-predict-api:$SHORT_SHA
-
-logs_bucket: gs://logs_purchase_predict_api/logs_build_cloud_build
+  id: Rendering templated K8s YAML file
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+     sed -s '$a---' k8s/*.yaml > config.yaml.tpl &&
+     sed "s/DOCKER_TAG/${SHORT_SHA}/g" config.yaml.tpl > config.yaml
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: Deploy to K8s
+  args:
+  - 'apply'
+  - '--namespace'
+  - 'api-purchase'
+  - '-f'
+  - 'config.yaml'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central-1b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=purchase-predict-api'
